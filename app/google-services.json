@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "922721885088",
+    "project_id": "chronos-reminder-app",
+    "storage_bucket": "chronos-reminder-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922721885088:android:4f86ea7792545e81ef22c5",
+        "android_client_info": {
+          "package_name": "com.ghanshyam.chronos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "922721885088-o36ohq1a2k0pruccjd89rlqaovb0oc3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtl4a_f4ofi7_HoCVo8Zb_-JDWjR-Wv2g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "922721885088-o36ohq1a2k0pruccjd89rlqaovb0oc3r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922721885088:android:ebe3404661cac7c2ef22c5",
+        "android_client_info": {
+          "package_name": "com.ghanshyam.chronosapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "922721885088-tnjifjqlusprlpie6vqslssl5oaabumk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ghanshyam.chronosapp",
+            "certificate_hash": "00b58a77005d1e4c34954318c29c015b89a20a2a"
+          }
+        },
+        {
+          "client_id": "922721885088-o36ohq1a2k0pruccjd89rlqaovb0oc3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtl4a_f4ofi7_HoCVo8Zb_-JDWjR-Wv2g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "922721885088-o36ohq1a2k0pruccjd89rlqaovb0oc3r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
