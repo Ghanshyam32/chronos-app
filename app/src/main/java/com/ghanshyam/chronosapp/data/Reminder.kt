@@ -2,9 +2,9 @@
 package com.ghanshyam.chronosapp.data
 
 data class Reminder(
-  val id: String = "",           // Firestore doc ID
-  val title: String = "",        // user‑entered title
-  val description: String = "",  // optional notes
-  val timestamp: Long = 0L,      // millis since epoch
-  val imageUrl: String? = null   // we’ll wire this later
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val timestamp: Long = 0L,
+    val imageUrl: String? = null
 )

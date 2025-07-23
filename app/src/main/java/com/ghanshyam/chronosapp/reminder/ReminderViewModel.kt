@@ -1,4 +1,3 @@
-// app/src/main/java/com/ghanshyam/chronosapp/reminder/ReminderViewModel.kt
 package com.ghanshyam.chronosapp.reminder
 
 import android.net.Uri
@@ -10,7 +9,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 sealed class UiEvent {
-    /** Now carries the saved reminder */
     data class SaveSuccess(val reminder: Reminder) : UiEvent()
     data class SaveError(val message: String)    : UiEvent()
 }
@@ -40,9 +38,7 @@ class ReminderViewModel(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                // 1️⃣ possibly upload image
                 val imageUrl = imageUri?.let { repo.uploadImage(userId, it) }
-                // 2️⃣ build reminder & save
                 val toSave = Reminder(
                     title       = title,
                     description = description,
@@ -50,7 +46,6 @@ class ReminderViewModel(
                     imageUrl    = imageUrl
                 )
                 val saved = repo.addReminder(userId, toSave)
-                // 3️⃣ emit event with the saved reminder
                 _eventFlow.emit(UiEvent.SaveSuccess(saved))
             } catch (e: Exception) {
                 _eventFlow.emit(UiEvent.SaveError(e.localizedMessage ?: "Unknown error"))

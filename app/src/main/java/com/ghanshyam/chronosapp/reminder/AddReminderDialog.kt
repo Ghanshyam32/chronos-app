@@ -1,4 +1,3 @@
-// app/src/main/java/com/ghanshyam/chronosapp/reminder/AddReminderDialog.kt
 package com.ghanshyam.chronosapp.reminder
 
 import android.app.DatePickerDialog
@@ -36,12 +35,10 @@ fun AddReminderDialog(
 
   val isSaving by viewModel.isSaving.collectAsState()
 
-  // 1️⃣ Collect the new UiEvent.SaveSuccess(reminder)
   LaunchedEffect(viewModel.eventFlow) {
     viewModel.eventFlow.collect { event ->
       when (event) {
         is UiEvent.SaveSuccess -> {
-          // schedule the notification now that we have the saved Reminder
           NotificationHelper.scheduleAlarm(
             context     = context,
             timeMillis  = event.reminder.timestamp,
@@ -57,7 +54,6 @@ fun AddReminderDialog(
     }
   }
 
-  // pickers
   val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
   val dp = DatePickerDialog(
     context,
@@ -144,7 +140,6 @@ fun AddReminderDialog(
       }
     )
 
-    // 2️⃣ Block UI while saving
     if (isSaving) {
       Box(
         Modifier

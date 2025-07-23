@@ -1,4 +1,3 @@
-// app/src/main/java/com/ghanshyam/chronosapp/ai/AIGreetingRepository.kt
 package com.ghanshyam.chronosapp.ai
 
 import kotlinx.coroutines.Dispatchers
@@ -10,10 +9,6 @@ import java.net.URLEncoder
 class AIGreetingRepository {
   private val client = OkHttpClient()
 
-  /**
-   * Fetches a greeting from Pollinations,
-   * e.g. prompt="write a short birthday wish for Prashant"
-   */
   suspend fun fetchGreeting(prompt: String): String = withContext(Dispatchers.IO) {
     val encoded = URLEncoder.encode(prompt, "utf-8")
     val url     = "https://text.pollinations.ai/prompt/$encoded"

@@ -1,4 +1,3 @@
-// app/src/main/java/com/ghanshyam/chronosapp/ui/ChronosNavGraph.kt
 package com.ghanshyam.chronosapp.ui
 
 import android.content.Intent
@@ -36,7 +35,6 @@ fun ChronosNavGraph(
     val user by authViewModel.currentUser.collectAsState()
     val context = LocalContext.current
 
-    // AI dialog state
     var showAIDialog by remember { mutableStateOf(false) }
     var aiPrompt by remember { mutableStateOf("") }
     var loadingAI by remember { mutableStateOf(false) }
@@ -68,7 +66,6 @@ fun ChronosNavGraph(
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("Chronos") },
                             navigationIcon = {
                                 user!!.photoUrl?.let {
                                     AsyncImage(
@@ -83,6 +80,7 @@ fun ChronosNavGraph(
                                     )
                                 }
                             },
+                            title = { Text("Hello, ${user?.displayName ?: user?.email ?: "User"}!") },
                             actions = {
                                 IconButton(onClick = { showAIDialog = true }) {
                                     Icon(Icons.Filled.SmartToy, "AI Greeting")
@@ -113,7 +111,7 @@ fun ChronosNavGraph(
                             .fillMaxSize()
                             .padding(padding),
                         onItemClick = { editId = it },
-                        onImageClick = { /* no full-screen any more */ }
+                        onImageClick = {}
                     )
                 }
 
@@ -128,7 +126,7 @@ fun ChronosNavGraph(
         }
     }
 
-    // ── AI DIALOG ───────────────────────────────────────────
+    // AI DIALOG
     if (showAIDialog) {
         AlertDialog(
             onDismissRequest = { showAIDialog = false },
@@ -148,7 +146,6 @@ fun ChronosNavGraph(
                     }
                 }
             },
-            // at top of your @Composable
 
         confirmButton = {
             TextButton(
@@ -158,7 +155,7 @@ fun ChronosNavGraph(
                         aiResult = try {
                             aiRepo.fetchGreeting(aiPrompt)
                         } catch (e: Exception) {
-                            "❌ Failed: ${e.message}"
+                            "Failed: ${e.message}"
                         }
                         loadingAI = false
                     }
@@ -178,9 +175,8 @@ fun ChronosNavGraph(
         )
     }
 
-    // ── AI SHARE SHEET ───────────────────────────────────────
+    // AI SHARE SHEET
     aiResult?.let { result ->
-        // share via Android share sheet
         LaunchedEffect(result) {
             val share = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"

@@ -36,7 +36,6 @@ fun ShareAiMessageButton(
     }
   }
 
-  // When greeting arrives, fire the Android share sheet once
   LaunchedEffect(greeting) {
     greeting?.let { text ->
       val intent = Intent().apply {

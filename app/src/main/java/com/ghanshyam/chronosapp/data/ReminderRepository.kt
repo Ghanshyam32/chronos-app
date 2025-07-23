@@ -1,4 +1,3 @@
-// app/src/main/java/com/ghanshyam/chronosapp/data/ReminderRepository.kt
 package com.ghanshyam.chronosapp.data
 
 import android.net.Uri
@@ -15,7 +14,6 @@ class ReminderRepository {
   private val firestore = FirebaseFirestore.getInstance()
   private val col = firestore.collection("reminders")
 
-  /** Uploads the image, returns its public URL */
   suspend fun uploadImage(userId: String, uri: Uri): String {
     val ref = FirebaseStorage.getInstance()
       .reference
@@ -24,10 +22,6 @@ class ReminderRepository {
     return ref.downloadUrl.await().toString()
   }
 
-  /**
-   * Saves the reminder under the user’s UID.
-   * Returns the reminder with its new document ID filled in.
-   */
   suspend fun addReminder(userId: String, reminder: Reminder): Reminder {
     val docRef = col
       .document(userId)

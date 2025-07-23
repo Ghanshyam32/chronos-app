@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Create notification channel first.
         createNotificationChannel()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -37,7 +36,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-        // Google Sign-In setup
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
@@ -51,7 +49,6 @@ class MainActivity : ComponentActivity() {
                 val acct = task.getResult(Exception::class.java)!!
                 authViewModel.firebaseAuthWithGoogle(acct.idToken!!)
             } catch (_: Exception) {
-                // handle sign-in failure (if needed)
             }
         }
 

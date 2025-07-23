@@ -1,4 +1,3 @@
-// app/src/main/java/com/ghanshyam/chronosapp/ai/AiViewModel.kt
 package com.ghanshyam.chronosapp.ai
 
 import androidx.lifecycle.ViewModel
