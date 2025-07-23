@@ -31,52 +31,53 @@ fun AddReminderScreen(
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
-
   var title by remember { mutableStateOf("") }
   var description by remember { mutableStateOf("") }
   var timestamp by remember { mutableStateOf(System.currentTimeMillis()) }
   var imageUri by remember { mutableStateOf<Uri?>(null) }
-
   val isSaving by viewModel.isSaving.collectAsState()
-  LaunchedEffect(viewModel.eventFlow) {
-    viewModel.eventFlow.collect { event ->
-      when (event) {
-        UiEvent.SaveSuccess -> {
-          Toast.makeText(context, "Reminder saved!", Toast.LENGTH_SHORT).show()
-          title = ""
-          description = ""
-          timestamp = System.currentTimeMillis()
-          imageUri = null
-        }
-        is UiEvent.SaveError -> {
-          Toast.makeText(context, "Error: ${event.message}", Toast.LENGTH_LONG).show()
-        }
-      }
+
+  // Robust Notification permission handling
+  val permLauncher = rememberLauncherForActivityResult(RequestPermission()) { granted ->
+    if (!granted) {
+      Toast.makeText(
+        context,
+        "Enable notification permission in settings for reminder alerts.",
+        Toast.LENGTH_LONG
+      ).show()
+    }
+  }
+  LaunchedEffect(Unit) {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
   }
 
-  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-    val permLauncher = rememberLauncherForActivityResult(RequestPermission()) {}
-    LaunchedEffect(Unit) { permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
-  }
-
-  val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
+  val calendar = remember { Calendar.getInstance() }
   val datePicker = DatePickerDialog(
     context,
-    { _, y, m, d -> calendar.set(y, m, d); timestamp = calendar.timeInMillis },
+    { _, y, m, d ->
+      calendar.set(Calendar.YEAR, y)
+      calendar.set(Calendar.MONTH, m)
+      calendar.set(Calendar.DAY_OF_MONTH, d)
+      timestamp = calendar.timeInMillis
+    },
     calendar.get(Calendar.YEAR),
     calendar.get(Calendar.MONTH),
     calendar.get(Calendar.DAY_OF_MONTH)
   )
   val timePicker = TimePickerDialog(
     context,
-    { _, h, min -> calendar.set(Calendar.HOUR_OF_DAY, h); calendar.set(Calendar.MINUTE, min); timestamp = calendar.timeInMillis },
+    { _, h, min ->
+      calendar.set(Calendar.HOUR_OF_DAY, h)
+      calendar.set(Calendar.MINUTE, min)
+      timestamp = calendar.timeInMillis
+    },
     calendar.get(Calendar.HOUR_OF_DAY),
     calendar.get(Calendar.MINUTE),
     false
   )
 
-  // Gallery picker
   val galleryLauncher = rememberLauncherForActivityResult(GetContent()) { uri ->
     imageUri = uri
   }
@@ -104,7 +105,7 @@ fun AddReminderScreen(
         } else {
           Surface(
             shape = CircleShape,
-            tonalElevation = 4.dp,
+            shadowElevation = 4.dp,
             modifier = Modifier.fillMaxSize()
           ) {
             Box(contentAlignment = Alignment.Center) {
@@ -124,7 +125,6 @@ fun AddReminderScreen(
         label = { Text("Title") },
         modifier = Modifier.fillMaxWidth()
       )
-
       OutlinedTextField(
         value = description,
         onValueChange = { description = it },
@@ -136,14 +136,12 @@ fun AddReminderScreen(
         Button(onClick = { datePicker.show() }) { Text("Pick Date") }
         Button(onClick = { timePicker.show() }) { Text("Pick Time") }
       }
-
       Text(
         text = "Will notify at: ${Date(timestamp)}",
         style = MaterialTheme.typography.bodySmall
       )
 
       Spacer(Modifier.height(24.dp))
-
       Button(
         onClick = {
           NotificationHelper.scheduleAlarm(
@@ -160,7 +158,6 @@ fun AddReminderScreen(
         Text("Save Reminder")
       }
     }
-
     if (isSaving) {
       Box(
         Modifier

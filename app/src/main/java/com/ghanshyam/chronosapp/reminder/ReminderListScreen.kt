@@ -63,7 +63,6 @@ fun ReminderListScreen(
                 modifier = Modifier
                   .size(60.dp)
                   .clip(RoundedCornerShape(8.dp))
-                  .clickable { onImageClick(url) }
               )
             }
           }
