@@ -1,26 +1,29 @@
+// app/src/main/java/com/ghanshyam/chronosapp/ui/ChronosNavGraph.kt
 package com.ghanshyam.chronosapp.ui
 
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.*
-import androidx.navigation.navArgument
 import coil.compose.AsyncImage
+import com.ghanshyam.chronosapp.ai.AIGreetingRepository
 import com.ghanshyam.chronosapp.auth.AuthViewModel
 import com.ghanshyam.chronosapp.reminder.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,27 +31,31 @@ fun ChronosNavGraph(
     authViewModel: AuthViewModel,
     onSignIn: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope ()
     val navController = rememberNavController()
     val user by authViewModel.currentUser.collectAsState()
+    val context = LocalContext.current
+
+    // AI dialog state
+    var showAIDialog by remember { mutableStateOf(false) }
+    var aiPrompt by remember { mutableStateOf("") }
+    var loadingAI by remember { mutableStateOf(false) }
+    var aiResult by remember { mutableStateOf<String?>(null) }
+
+    val aiRepo = remember { AIGreetingRepository() }
 
     NavHost(
         navController = navController,
         startDestination = if (user == null) "login" else "list"
     ) {
-
-        // LOGIN SCREEN
         composable("login") {
             SignInScreen(onSignIn = onSignIn)
         }
 
-        // MAIN LIST, ADD, EDIT SCREENS
         composable("list") {
             if (user == null) {
-                // If logged out, bounce
                 LaunchedEffect(Unit) {
-                    navController.navigate("login") {
-                        popUpTo("list") { inclusive = true }
-                    }
+                    navController.navigate("login") { popUpTo("list") { inclusive = true } }
                 }
             } else {
                 val vm: ReminderViewModel = viewModel(
@@ -61,32 +68,34 @@ fun ChronosNavGraph(
                 Scaffold(
                     topBar = {
                         TopAppBar(
+                            title = { Text("Chronos") },
                             navigationIcon = {
-                                user?.photoUrl?.let { url ->
+                                user!!.photoUrl?.let {
                                     AsyncImage(
-                                        model = url,
-                                        "",
+                                        model = it, contentDescription = "Profile",
                                         modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                            .padding(8.dp)
+                                            .size(36.dp)
+                                            .padding(4.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.surface,
+                                                shape = CircleShape
+                                            )
                                     )
                                 }
                             },
-                            title = { Text("Hello, ${user?.displayName ?: user?.email ?: "User"}!") },
                             actions = {
-                                IconButton(
-                                    onClick = {
-                                        authViewModel.signOut()
-                                        navController.navigate("login") {
-                                            popUpTo("list") { inclusive = true }
+                                IconButton(onClick = { showAIDialog = true }) {
+                                    Icon(Icons.Filled.SmartToy, "AI Greeting")
+                                }
+                                IconButton(onClick = {
+                                    authViewModel.signOut()
+                                    navController.navigate("login") {
+                                        popUpTo("list") {
+                                            inclusive = true
                                         }
                                     }
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.Logout,
-                                        contentDescription = "Logout"
-                                    )
+                                }) {
+                                    Icon(Icons.Filled.Logout, "Sign out")
                                 }
                             }
                         )
@@ -103,62 +112,86 @@ fun ChronosNavGraph(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(padding),
-                        onItemClick = { id -> editId = id },
-                        onImageClick = { url -> zoomImageUrl = url }
+                        onItemClick = { editId = it },
+                        onImageClick = { /* no full-screen any more */ }
                     )
-                    // Add dialog
-                    if (showAdd) {
-                        AddReminderDialog(viewModel = vm, onCancel = { showAdd = false })
-                    }
-                    // Edit dialog
-                    editId?.let { id ->
-                        val toEdit = vm.reminders.value.firstOrNull { it.id == id } ?: return@let
-                        EditReminderDialog(
-                            reminder = toEdit,
-                            viewModel = vm,
-                            onDismiss = { editId = null }
-                        )
-                    }
-                    // Enlarged image
-                    zoomImageUrl?.let { url ->
-                        BackHandler { zoomImageUrl = null }
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.8f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AsyncImage(
-                                model = url,
-                                contentDescription = "Full image",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            )
-                        }
-                    }
+                }
+
+                if (showAdd) {
+                    AddReminderDialog(vm) { showAdd = false }
+                }
+                editId?.let { id ->
+                    val toEdit = vm.reminders.value.first { it.id == id }
+                    EditReminderDialog(toEdit, vm) { editId = null }
                 }
             }
         }
+    }
 
-        // Optional: Dedicated Edit Route
-        composable(
-            "edit/{reminderId}",
-            arguments = listOf(navArgument("reminderId") {
-                type = NavType.StringType
-            })
-        ) { backStackEntry ->
-            val rid = backStackEntry.arguments!!.getString("reminderId")!!
-            if (user != null) {
-                val vm: ReminderViewModel = viewModel(
-                    factory = ReminderViewModelFactory(user!!.uid)
-                )
-                EditReminderScreen(
-                    reminderId = rid,
-                    viewModel = vm,
-                    onDone = { navController.popBackStack() }
-                )
+    // ── AI DIALOG ───────────────────────────────────────────
+    if (showAIDialog) {
+        AlertDialog(
+            onDismissRequest = { showAIDialog = false },
+            title = { Text("Generate AI Greeting") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = aiPrompt,
+                        onValueChange = { aiPrompt = it },
+                        label = { Text("Enter your prompt") },
+                        placeholder = { Text("e.g. Write a short birthday wish for Prashant.") },
+                        singleLine = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (loadingAI) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                }
+            },
+            // at top of your @Composable
+
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    loadingAI = true
+                    coroutineScope.launch {
+                        aiResult = try {
+                            aiRepo.fetchGreeting(aiPrompt)
+                        } catch (e: Exception) {
+                            "❌ Failed: ${e.message}"
+                        }
+                        loadingAI = false
+                    }
+                },
+                enabled = aiPrompt.isNotBlank() && !loadingAI
+            ) {
+                Text("Generate")
             }
+        }
+
+        ,
+        dismissButton = {
+            TextButton(onClick = { showAIDialog = false }) {
+                Text("Cancel")
+            }
+        }
+        )
+    }
+
+    // ── AI SHARE SHEET ───────────────────────────────────────
+    aiResult?.let { result ->
+        // share via Android share sheet
+        LaunchedEffect(result) {
+            val share = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, result)
+            }
+            context.startActivity(
+                Intent.createChooser(share, "Share your AI message")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+            aiResult = null
+            showAIDialog = false
         }
     }
 }
