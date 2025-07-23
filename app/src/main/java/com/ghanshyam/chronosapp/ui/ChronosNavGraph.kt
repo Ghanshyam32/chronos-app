@@ -18,13 +18,15 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
-import kotlinx.coroutines.launch
 import com.ghanshyam.chronosapp.auth.AuthViewModel
 import com.ghanshyam.chronosapp.reminder.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChronosNavGraph(authViewModel: AuthViewModel) {
+fun ChronosNavGraph(
+  authViewModel: AuthViewModel,
+  onSignIn: () -> Unit             // ← NEW
+) {
   val navController = rememberNavController()
   val user by authViewModel.currentUser.collectAsState()
 
@@ -32,52 +34,50 @@ fun ChronosNavGraph(authViewModel: AuthViewModel) {
     navController    = navController,
     startDestination = if (user == null) "login" else "list"
   ) {
-    // --- LOGIN ---
+    // --- LOGIN SCREEN ---
     composable("login") {
-      SignInScreen(onSignIn = { navController.navigate("list") })
+      SignInScreen(
+        onSignIn = onSignIn       // ← CALL the launcher from MainActivity
+      )
     }
 
     // --- LIST + FAB + DIALOGS + ZOOM ---
     composable("list") {
-      // if user is no longer signed in, bounce back
+      // If user becomes null, bounce back to login
       if (user == null) {
         LaunchedEffect(Unit) {
           navController.navigate("login") {
             popUpTo("list") { inclusive = true }
           }
         }
-        // render an empty placeholder while redirecting
-        Box(Modifier.fillMaxSize()) {}
+        Box(Modifier.fillMaxSize()) {} // placeholder
       } else {
-        // safe to do user!! now
         val vm: ReminderViewModel = viewModel(
           factory = ReminderViewModelFactory(user!!.uid)
         )
-
         var showAdd     by remember { mutableStateOf(false) }
         var editId      by remember { mutableStateOf<String?>(null) }
-        var fullImageUrl by remember { mutableStateOf<String?>(null) }
+        var zoomUrl     by remember { mutableStateOf<String?>(null) }
 
         Scaffold(
           topBar = {
             TopAppBar(
-              title = { Text("Chronos") },
+              title   = { Text("Chronos") },
               actions = {
                 IconButton(onClick = {
-                  // sign out and navigate back to login
                   authViewModel.signOut()
                   navController.navigate("login") {
                     popUpTo("list") { inclusive = true }
                   }
                 }) {
-                  Icon(Icons.Default.Logout, contentDescription = "Sign out")
+                  Icon(Icons.Default.Logout, "Sign out")
                 }
               }
             )
           },
           floatingActionButton = {
             FloatingActionButton(onClick = { showAdd = true }) {
-              Icon(Icons.Default.Add, contentDescription = "Add Reminder")
+              Icon(Icons.Default.Add, "Add reminder")
             }
           },
           floatingActionButtonPosition = FabPosition.Center
@@ -85,25 +85,19 @@ fun ChronosNavGraph(authViewModel: AuthViewModel) {
           ReminderListScreen(
             viewModel    = vm,
             modifier     = Modifier
-              .padding(padding)
-              .fillMaxSize(),
-            onItemClick  = { id  -> editId      = id      },
-            onImageClick = { url -> fullImageUrl = url     }
+              .fillMaxSize()
+              .padding(padding),
+            onItemClick  = { id  -> editId  = id  },
+            onImageClick = { url -> zoomUrl = url }
           )
         }
 
-        // 1️⃣ Add dialog
         if (showAdd) {
           AddReminderDialog(
-            onSave   = { t, d, ts, uri ->
-              vm.addReminder(t, d, ts, uri)
-              showAdd = false
-            },
+            onSave   = { t,d,ts,uri -> vm.addReminder(t,d,ts,uri); showAdd = false },
             onCancel = { showAdd = false }
           )
         }
-
-        // 2️⃣ Edit dialog
         editId?.let { id ->
           val toEdit = vm.reminders.value.first { it.id == id }
           EditReminderDialog(
@@ -112,10 +106,8 @@ fun ChronosNavGraph(authViewModel: AuthViewModel) {
             onDismiss = { editId = null }
           )
         }
-
-        // 3️⃣ Full‑screen zoom
-        fullImageUrl?.let { url ->
-          BackHandler { fullImageUrl = null }
+        zoomUrl?.let { url ->
+          BackHandler { zoomUrl = null }
           Box(
             Modifier
               .fillMaxSize()
@@ -134,19 +126,19 @@ fun ChronosNavGraph(authViewModel: AuthViewModel) {
       }
     }
 
-    // --- (Optional) Separate edit route ---
+    // Optional fallback edit route…
     composable(
       "edit/{reminderId}",
       arguments = listOf(navArgument("reminderId") {
         type = NavType.StringType
       })
     ) { back ->
-      val rid = back.arguments!!.getString("reminderId")!!
+      val id = back.arguments!!.getString("reminderId")!!
       val vm: ReminderViewModel = viewModel(
         factory = ReminderViewModelFactory(user!!.uid)
       )
       EditReminderScreen(
-        reminderId = rid,
+        reminderId = id,
         viewModel  = vm,
         onDone     = { navController.popBackStack() }
       )
