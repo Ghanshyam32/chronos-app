@@ -44,22 +44,19 @@
 Below are screenshots of the Chronos app showcasing key features:
 
 ### Sign In Screen
-![Sign In Screen](assets/screenshots/signin_screen.jpg)
-Log in securely with Google Sign-In.
+<img src="assets/screenshots/signin_screen.jpg" width="300" />
 
 ### Add Reminder Dialog
-![Add Reminder Dialog](assets/screenshots/add_reminder_dialog.jpg)
-Create a new reminder with a title, notes, date, time, and optional photo.
+<img src="assets/screenshots/add_reminder_dialog.jpg" width="300" />
 
 ### Home Screen
-![Home Screen](assets/screenshots/home_screen.jpg)
-View all your reminders in a list with thumbnails and access the AI greeting feature.
+<img src="assets/screenshots/home_screen.jpg" width="300" />
 
 ##  Getting Started
 
 1. **Clone the repo**  
    ```bash
-   git clone https://github.com/your-username/chronos.git
+   git clone https://github.com/Ghanshyam32/chronos-app.git
    ```
 
 2. **Set up Firebase**  
